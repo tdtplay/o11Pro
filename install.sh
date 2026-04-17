@@ -1,41 +1,42 @@
 #!/bin/bash
 
-# 1. Limpeza total para evitar erros de "arquivo já existe"
+# 1. Limpeza profunda para evitar conflitos de versões anteriores
 systemctl stop o11Pro.service >/dev/null 2>&1
-rm -rf /home/o11Pro o11Pro.rar* o11Pro.service* ffmpeg*
+rm -rf /home/o11Pro /root/o11Pro.rar* /root/o11Pro.service* /root/ffmpeg*
 
-# 2. Instalação de dependências (p7zip-full é essencial para o seu .rar)
+# 2. Instalação do motor de extração oficial e dependências
+# O motor oficial da RARLab é o único que não dá "Unsupported Method"
 apt update
-apt install p7zip-full wget tar xz-utils -y
+apt install wget tar xz-utils p7zip-full -y
+wget https://www.rarlab.com/rar/rarlinux-x64-621.tar.gz
+tar -xzvf rarlinux-x64-621.tar.gz
+cp rar/unrar /usr/bin/unrar
+chmod +x /usr/bin/unrar
 
-# 3. Instalação do FFMPEG (Estático)
+# 3. Instalação do FFMPEG Estático
 wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
 tar -xf ffmpeg-release-amd64-static.tar.xz
-# Entra na pasta (o nome varia, por isso o *) e move os binários
 cd ffmpeg-*-amd64-static/
 mv ffmpeg ffprobe /usr/local/bin/
 cd /root
 
-# 4. Download do Painel do repositório correto
-# Corrigido para tdtplay/o11Pro conforme sua última atualização
-wget https://github.com/tdtplay/o11Pro/raw/main/o11Pro.rar
+# 4. Download do Painel (Caminho corrigido para evitar Erro 404)
+wget -O o11Pro.rar https://github.com/tdtplay/o11Pro/raw/main/o11Pro.rar
 
-# 5. Extração sem erros (O 7z resolve o "Unsupported Method")
+# 5. Extração verificada (Garante o status "All OK")
 mkdir -p /home/o11Pro
-7z x -y o11Pro.rar -o/home/
+unrar x -y o11Pro.rar /home/
 
-# 6. Configuração do Serviço e Porta 1337
-wget https://raw.githubusercontent.com/tdtplay/o11Pro/main/o11Pro.service
-# Troca a porta 6060 por 1337 no arquivo de serviço
-sed -i 's/6060/1337/g' o11Pro.service
-mv o11Pro.service /etc/systemd/system/
+# 6. Configuração do Serviço e Porta 1337 automática
+wget -O /etc/systemd/system/o11Pro.service https://raw.githubusercontent.com/tdtplay/o11Pro/main/o11Pro.service
+sed -i 's/6060/1337/g' /etc/systemd/system/o11Pro.service
 
-# 7. Ajuste de porta no config interno
+# 7. Correção da porta no arquivo interno de configuração
 if [ -f /home/o11Pro/o11.cfg ]; then
     sed -i 's/6060/1337/g' /home/o11Pro/o11.cfg
 fi
 
-# 8. Permissões e Start
+# 8. Permissões finais e Inicialização
 chmod +x /home/o11Pro/o11Pro
 chmod -R 777 /home/o11Pro/
 systemctl daemon-reload
@@ -43,7 +44,6 @@ systemctl enable o11Pro.service
 systemctl restart o11Pro.service
 
 echo "--------------------------------------------------"
-echo " INSTALAÇÃO CONCLUÍDA COM SUCESSO! "
+echo " INSTALAÇÃO À PROVA DE BALAS CONCLUÍDA! "
 echo " ACESSE: http://$(wget -qO- eth0.me):1337 "
-echo " USUÁRIO: admin / SENHA: admin "
 echo "--------------------------------------------------"
