@@ -2,7 +2,7 @@
 Description=o11
 
 [Service]
-ExecStart=/home/o11Pro/o11Pro -p 6060 -f /usr/local/bin/ffmpeg -path /home/o11Pro/
+ExecStart=/home/o11Pro/o11Pro -p 1337 -f /usr/local/bin/ffmpeg -path /home/o11Pro/
 Restart=always
 User=root
 WorkingDirectory=/home/o11Pro
